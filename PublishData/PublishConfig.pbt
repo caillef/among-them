@@ -1,0 +1,12 @@
+﻿GameId: "92d10906ea1d47cc80f15df3f743d78b"
+ClientVersion: "1.0.164-prod-s"
+Name: "Among Them"
+Description: "Among Us but in first person and not in space"
+MaxPlayers: 7
+Tags: "Multiplayer"
+Tags: "Competitive"
+Tags: "FirstPerson"
+Tags: "Fantasy"
+Tags: "Action"
+ScreenshotPaths: "C:/Users/hiind/Documents/My Games/CORE/Saved/Maps/Among Them/Screenshots/Screenshot0001.png"
+OwnerId: "be87c969b2e5444dac5c09d330a142ab"
