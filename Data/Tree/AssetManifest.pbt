@@ -1,4 +1,13 @@
 ﻿Assets {
+  Id: 18441810659176357459
+  Name: "Planet"
+  PlatformAssetType: 6
+  PrimaryAsset {
+    AssetType: "BlueprintAssetRef"
+    AssetId: "CORESKY_Planet"
+  }
+}
+Assets {
   Id: 18380063980296447160
   Name: "Death"
   PlatformAssetType: 9
@@ -8,39 +17,30 @@
   }
 }
 Assets {
-  Id: 17642809734782090195
-  Name: "Tech Panel 02"
-  PlatformAssetType: 2
+  Id: 16910278292812118833
+  Name: "Sun Light"
+  PlatformAssetType: 6
   PrimaryAsset {
-    AssetType: "MaterialAssetRef"
-    AssetId: "mi_sf_gen_tech-panel_002_uv"
+    AssetType: "BlueprintAssetRef"
+    AssetId: "CORESKY_SunLight"
   }
 }
 Assets {
-  Id: 14314259545381307747
-  Name: "Cube - Bottom-Aligned"
-  PlatformAssetType: 1
+  Id: 12344193518355455075
+  Name: "Star Dome"
+  PlatformAssetType: 6
   PrimaryAsset {
-    AssetType: "StaticMeshAssetRef"
-    AssetId: "sm_cube_001"
+    AssetType: "BlueprintAssetRef"
+    AssetId: "CORESKY_StarDome"
   }
 }
 Assets {
-  Id: 12095835209017042614
-  Name: "Cube"
-  PlatformAssetType: 1
+  Id: 11515840070784317904
+  Name: "Skylight"
+  PlatformAssetType: 6
   PrimaryAsset {
-    AssetType: "StaticMeshAssetRef"
-    AssetId: "sm_cube_002"
-  }
-}
-Assets {
-  Id: 8303253357079092035
-  Name: "Metal Floor Panel 01"
-  PlatformAssetType: 2
-  PrimaryAsset {
-    AssetType: "MaterialAssetRef"
-    AssetId: "mi_scf_simple_floor_panel_001_uv"
+    AssetType: "BlueprintAssetRef"
+    AssetId: "CORESKY_Skylight"
   }
 }
 Assets {
@@ -62,6 +62,15 @@ Assets {
   }
 }
 Assets {
+  Id: 3892449534671893121
+  Name: "Icon Player Walk"
+  PlatformAssetType: 9
+  PrimaryAsset {
+    AssetType: "PlatformBrushAssetRef"
+    AssetId: "Icon_PlayerWalk"
+  }
+}
+Assets {
   Id: 2926050677733351735
   Name: "Icon Arrow"
   PlatformAssetType: 9
@@ -77,6 +86,24 @@ Assets {
   PrimaryAsset {
     AssetType: "StaticMeshAssetRef"
     AssetId: "sm_sphere_inverted_001"
+  }
+}
+Assets {
+  Id: 2617361319805279588
+  Name: "Nebula"
+  PlatformAssetType: 6
+  PrimaryAsset {
+    AssetType: "BlueprintAssetRef"
+    AssetId: "CORESKY_Nebula"
+  }
+}
+Assets {
+  Id: 1353607577508895962
+  Name: "Moon"
+  PlatformAssetType: 6
+  PrimaryAsset {
+    AssetType: "BlueprintAssetRef"
+    AssetId: "CORESKY_Moon"
   }
 }
 Assets {

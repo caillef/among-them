@@ -1,12 +1,18 @@
 ﻿local propSoundMissionCompleted = script:GetCustomProperty("SoundMissionCompleted"):WaitForObject()
 local propUIProgressBar = script:GetCustomProperty("UIProgressBar"):WaitForObject()
+local propPlayerImage = script:GetCustomProperty("PlayerImage"):WaitForObject()
 
 local OPEN_MAP_KEY = "ability_extra_19"
+
+propUIProgressBar.visibility = Visibility.FORCE_OFF
 
 local indicators = {
     script:GetCustomProperty("UIImage"):WaitForObject(),
     script:GetCustomProperty("UIImage_0"):WaitForObject(),
-    script:GetCustomProperty("UIImage_1"):WaitForObject()
+    script:GetCustomProperty("UIImage_1"):WaitForObject(),
+    script:GetCustomProperty("UIImage_2"):WaitForObject(),
+    script:GetCustomProperty("UIImage_3"):WaitForObject(),
+    script:GetCustomProperty("UIImage_4"):WaitForObject(),
 }
 
 local missions = {}
@@ -15,10 +21,9 @@ local player = Game.GetLocalPlayer()
 local MAP_OPENED = false
 
 function OnAssignedMission(data)
-    print(data.m.." assigned to "..Game.GetLocalPlayer().name)
-    table.insert(missions, World.FindObjectById(data.m))
+    local m = World.FindObjectById(data.m)
+    table.insert(missions, m)
 end
-
 
 function OnBindingPressed(player, actionName)
     if actionName == OPEN_MAP_KEY then
@@ -26,6 +31,8 @@ function OnBindingPressed(player, actionName)
             i.x = -100
             i.y = -100
         end
+        propPlayerImage.x = -100
+        propPlayerImage.y = -100
         if MAP_OPENED then
             MAP_OPENED = false
             player:ClearOverrideCamera()
@@ -43,6 +50,9 @@ function OnBindingPressed(player, actionName)
                 i = i + 1
             end
         end
+        local pos = UI.GetScreenPosition(player:GetWorldPosition())
+        propPlayerImage.x = pos.x
+        propPlayerImage.y = pos.y
     end
 end
 
@@ -74,6 +84,7 @@ end
 
 function OnEndGame()
     propUIProgressBar.visibility = Visibility.FORCE_OFF
+    missions = {}
 end
 
 player.bindingPressedEvent:Connect(OnBindingPressed)

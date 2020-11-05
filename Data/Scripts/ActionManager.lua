@@ -9,8 +9,9 @@ local propDefeatPanel = script:GetCustomProperty("DefeatPanel"):WaitForObject()
 local propMCCTMPanel = script:GetCustomProperty("MCCTMPanel"):WaitForObject()
 local propCamera = script:GetCustomProperty("Camera"):WaitForObject()
 
-local ACTION_BUTTON = "ability_extra_17" -- Space
+local ACTION_BUTTON = "ability_extra_33" -- F
 local READY_BUTTON = "ability_extra_33" -- F
+local BUG_BUTTON = "ability_extra_44"
 
 local uiElems = {
     propKillButton,
@@ -29,6 +30,7 @@ end
 
 local player = Game.GetLocalPlayer()
 
+local gameStarted = false
 local impostor = false
 
 local overlappingPlayers = {}
@@ -43,21 +45,11 @@ function UpdateUI()
     local canReport = false
     local canKill = false
 
-    if impostor and killCooldown > 0 then
-        if killCooldown > 0 then
-            canKill = true
-            propKillTextBox.text = "Cooldown "..killCooldown.."s"
-        else
-            propKillTextBox.visibility = Visibility.FORCE_OFF
-        end
-    end
-
     for id,p in pairs(overlappingPlayers) do
         if p ~= nil and id ~= player.id and p:IsValid() then
             if impostor and not p.isDead and not canKill then
-                canKill = true
-                propKillTextBox.visibility = Visibility.FORCE_ON
                 propKillTextBox.text = "Kill"
+                canKill = true
             end
 
             if p.isDead and not canReport then
@@ -69,15 +61,27 @@ function UpdateUI()
         end
     end
 
+    if impostor then
+        if killCooldown > 0 then
+            propKillTextBox.text = "Cooldown "..killCooldown.."s"
+        elseif canReport or not canKill then
+            propKillTextBox.text = ""
+        end
+    end
+
     propReportButton.visibility = canReport and Visibility.FORCE_ON or Visibility.FORCE_OFF
-    propKillButton.visibility = canKill and Visibility.FORCE_ON or Visibility.FORCE_OFF
+    propKillButton.visibility = (impostor and #propKillTextBox.text > 0) and Visibility.FORCE_ON or Visibility.FORCE_OFF
+    propKillTextBox.visibility = (impostor and #propKillTextBox.text > 0) and Visibility.FORCE_ON or Visibility.FORCE_OFF
 end
 
 function OnBindingPressed(player, actionName)
+    if actionName == BUG_BUTTON then
+        Events.BroadcastToServer("CBUG")
+    end
+
     if actionName == READY_BUTTON then
         Events.BroadcastToServer("CReady", { p = player.id })
         propReadyText.text = "Waiting for at least 5 players to start (call your friends)"
-        return
     end
 
     if actionName == ACTION_BUTTON then
@@ -115,7 +119,7 @@ function actionKill(id, p)
     -- Action KILL
     if impostor and not p.isDead and killCooldown == 0 then
         Events.BroadcastToServer("CKill", { t = id })
-        killCooldown = 15
+        killCooldown = 30
         Task.Spawn(function()
             while killCooldown > 0 do
                 Task.Wait(1)
@@ -138,43 +142,54 @@ end
 function ManageOverlappingPlayers()
     for _,p in ipairs(Game.GetPlayers()) do
         if p:IsValid() and p.id ~= player.id then
-            if (p:GetWorldPosition() - player:GetWorldPosition()).sizeSquared < 30000 then
-                if overlappingPlayers[p.id] == nil then
-                    overlappingPlayers[p.id] = p
-                end
+            if (p:GetWorldPosition() - player:GetWorldPosition()).sizeSquared < 20000 then
+                overlappingPlayers[p.id] = p
             elseif overlappingPlayers[p.id] ~= nil then
                 overlappingPlayers[p.id] = nil
             end
         end
     end
-    UpdateUI()
 end
 
 function Tick()
+    if not gameStarted then
+        return
+    end
     ManageOverlappingPlayers()
+    UpdateUI()
 end
 
 function OnImpostor(isImposter)
     impostor = isImposter
-    propRole.visibility = Visibility.FORCE_ON
-    propRoleDescription.visibility = Visibility.FORCE_ON
     if impostor then
         propRole.text = "Impostor"
         propRole:SetColor(Color.RED)
-        propRoleDescription.text = "Kill the villagers without being caught"
+        propRoleDescription.text = "Kill everyone without being caught"
         propRoleDescription:SetColor(Color.RED)
     else
-        propRole.text = "Villager"
+        propRole.text = "Crewmate"
         propRole:SetColor(Color.WHITE)
         propRoleDescription.text = "Open your map with TAB and complete your tasks"
         propRoleDescription:SetColor(Color.WHITE)
     end
+    Task.Wait(3)
+    killCooldown = 15
+    Task.Spawn(function()
+        while killCooldown > 0 do
+            Task.Wait(1)
+            killCooldown = killCooldown - 1
+        end
+    end)
+    propRole.visibility = Visibility.FORCE_ON
+    propRoleDescription.visibility = Visibility.FORCE_ON
 end
 
 function OnEndGame(data)
+    player:ClearOverrideCamera()
     propKillButton.visibility = Visibility.FORCE_OFF
     propReportButton.visibility = Visibility.FORCE_OFF
     propMCCTMPanel.visibility = Visibility.FORCE_OFF
+    gameStarted = false
     local isVictory = data.s == (impostor and 0 or 1)
     print(isVictory and "Victory" or "Defeat")
     if isVictory then
@@ -195,6 +210,7 @@ end
 
 function OnStartGame(data)
     propReadyText.visibility = Visibility.FORCE_OFF
+    gameStarted = true
 end
 
 function OnPlayerKilled()

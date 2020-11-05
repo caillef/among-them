@@ -7,6 +7,8 @@ local gameOnGoing = false
 local lobbyPlayers = {}
 local roundPlayers = {}
 
+local resetCount = 0
+
 local colorsList = { Color.BLUE, Color.RED, Color.YELLOW, Color.GREEN, Color.PURPLE, Color.MAGENTA, Color.CYAN, Color.PINK, Color.ORANGE, Color.EMERALD }
 
 local votes = {}
@@ -15,7 +17,7 @@ local impostors = {}
 
 function PlacePlayerAroundTable(p, ratio)
     local middlePos = propTableSpawnpoint:GetWorldPosition()
-    p:SetWorldPosition(middlePos + Vector3.New(math.cos(ratio) * 350, math.sin(ratio) * 350, middlePos.z + 50))
+    p:SetWorldPosition(middlePos + Vector3.New(math.cos(ratio) * 250, math.sin(ratio) * 250, middlePos.z + 50))
 end
 
 function getNbPlayersInRound()
@@ -83,6 +85,12 @@ function CloseVotes()
         Events.BroadcastToAllPlayers("SResult", { p=p, t=t })
         Task.Wait(1)
     end
+    for _,p in pairs(roundPlayers) do
+        if p.p:IsValid() then
+            p.p.lookControlMode = LookControlMode.RELATIVE
+        end
+    end
+
     k = findGreatest(results)
     if k == nil then
         print("Tie.")
@@ -94,6 +102,7 @@ function CloseVotes()
             FinishGame()
             return
         end
+        Events.BroadcastToPlayer(roundPlayers[k].p, "SMCCTM")
     end
     Task.Wait(3)
     Events.BroadcastToAllPlayers("SEndRound", { k=k })
@@ -119,41 +128,47 @@ function FinishGame()
     lobbyPlayers = {}
     for _,p in pairs(roundPlayers) do
         if p.p:IsValid() then
-            p.p:SetWorldPosition(propLobbySpawnPoint:GetWorldPosition())
+            if p.p.isDead then
+                p.p:Respawn({ position=propLobbySpawnPoint:GetWorldPosition() })
+            else
+                p.p:SetWorldPosition(propLobbySpawnPoint:GetWorldPosition())
+            end
         end
     end
-    colorsList = { Color.BLUE, Color.RED, Color.YELLOW, Color.GREEN, Color.PURPLE, Color.MAGENTA, Color.CYAN, Color.PINK, Color.ORANGE, Color.EMERALD }
+    for _,p in pairs(lobbyPlayers) do
+        initPlayer(p.p)
+    end
     for _,p in pairs(roundPlayers) do
         initPlayer(p.p)
     end
+    gameOnGoing = false
 end
 
 function NextRound()
     votes = {}
     Events.BroadcastToAllPlayers("SStartRound")
-    for _,p in pairs(roundPlayers) do
-        if p.p:IsValid() then
-            p.p.lookControlMode = LookControlMode.RELATIVE
-        end
-    end
-
     i = 0
-    local nbPlayers = getNbPlayersInRound()
+    local nbPlayers = getAlivePlayersInRound()
     for id,p in pairs(roundPlayers) do
-        if id and p.p:IsValid() and not p.p.isDead then
-            PlacePlayerAroundTable(p.p, (i / nbPlayers) * 3.14 * 2)
+        if id and p.p:IsValid() then
+            if p.p.isDead then
+                p.p:Respawn({ position = propLobbySpawnPoint:GetWorldPosition() })
+                p.p:Die()
+            else
+                PlacePlayerAroundTable(p.p, (i / nbPlayers) * 3.14 * 2)
+            end
         end
         i = i + 1
     end
-
-    propMissionManager.context.AssignMissions(roundPlayers)
 end
 
 function StartGame()
     propMissionManager.context.StartGame()
     gameOnGoing = true
     for id,p in pairs(lobbyPlayers) do
+        print(p.name)
         if id and p.p:IsValid() then
+            print(p.name)
             roundPlayers[id] = p
             lobbyPlayers[id] = nil
             Events.BroadcastToAllPlayers('Clr', { p=p.p.id, c=p.color })
@@ -177,7 +192,7 @@ function StartGame()
             i = i + 1
         end
     end
-
+    propMissionManager.context.AssignMissions(roundPlayers)
     Events.BroadcastToAllPlayers("SStartGame")
     print("Start Game")
     NextRound()
@@ -239,7 +254,7 @@ function Tick()
         table.remove(playersToInit, 1)
         player:Respawn()
         player:SetWorldPosition(propLobbySpawnPoint:GetWorldPosition())
-        roundPlayers[player.id] = nil
+        OnPlayerLeft(player)
         lobbyPlayers[player.id] = { p=player }
         lobbyPlayers[player.id].color = colorsList[1]
         Events.BroadcastToAllPlayers('Clr', { p=player.id, c=colorsList[1] })
@@ -271,13 +286,14 @@ function GetNbPlayersInLobby()
 end
 
 function OnPlayerReady(data)
-    if lobbyPlayers[data.p] == nil or lobbyPlayers[data.p].isReady == true then
+    if gameOnGoing or lobbyPlayers[data.p] == nil or lobbyPlayers[data.p].isReady == true then
         return
     end
     print(data.p.." is ready")
     lobbyPlayers[data.p].isReady = true
 
-    if GetNbPlayersInLobby() < 4 then
+    --TODO: go to 5
+    if GetNbPlayersInLobby() < 2 then
         print("Need at least 5 people to start")
         return
     end
@@ -292,9 +308,19 @@ function OnPlayerReady(data)
     StartGame()
 end
 
+function OnRequestReset()
+    resetCount = resetCount + 1
+    if resetCount >= 10 then
+        resetCount = 0
+        Events.BroadcastToAllPlayers("SEndGame", { s=0 })
+        FinishGame()
+    end
+end
+
 Events.Connect("CKill", OnKill)
 Events.Connect("CReport", OnReport)
 Events.Connect("CVote", OnPlayerVote)
 Events.Connect("CReady", OnPlayerReady)
+Events.Connect("CBUG", OnRequestReset)
 Game.playerJoinedEvent:Connect(OnPlayerJoined)
 Game.playerLeftEvent:Connect(OnPlayerLeft)

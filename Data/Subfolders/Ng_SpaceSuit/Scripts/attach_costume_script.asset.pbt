@@ -1,6 +1,6 @@
 ﻿Assets {
-  Id: 8386282568666085925
-  Name: "GameplayManager"
+  Id: 1174589404145608084
+  Name: "attach_costume_script"
   PlatformAssetType: 3
   TextAsset {
   }

@@ -22,7 +22,7 @@ function AssignMissions(players)
     for _,p in pairs(players) do
         if not p.impostor then
             assignedMissions[p.p.id] = {}
-            for i=1, 3 do
+            for i=1, 6 do
                 table.insert(assignedMissions[p.p.id], missions[math.random(1, #missions)])
                 print(p.p.name..": "..assignedMissions[p.p.id][#assignedMissions[p.p.id]].id)
                 Events.BroadcastToPlayer(p.p, "SAM", { m=assignedMissions[p.p.id][#assignedMissions[p.p.id]].id }) -- ServerAssignMission
@@ -50,8 +50,13 @@ function OnMissionExecuted(data)
     for _,p in pairs(players) do
         if p:IsValid() and p.id == data.p then
             table.remove(assignedMissions[p.id], GetMissionIndex(assignedMissions[p.id], data.m))
-            data.percent = GetMissionsStatus().percentageCompletion
+            local percentage = GetMissionsStatus().percentageCompletion
+            data.percent = percentage
             Events.BroadcastToAllPlayers("SCM", data)
+            if percentage == 100 then
+                Events.BroadcastToAllPlayers("SEndGame", { s=1 })
+                return
+            end
         end
     end
 end

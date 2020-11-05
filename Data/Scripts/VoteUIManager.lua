@@ -89,11 +89,6 @@ end
 function OnEndRound(data)
     propUIContainer.visibility = Visibility.FORCE_OFF
     UI.SetCursorVisible(false)
-    if data.k ~= nil then
-        UI.PrintToScreen(data.k)
-    else
-        UI.PrintToScreen("Tie.")
-    end
 end
 
 function OnResult(data)
@@ -114,12 +109,6 @@ function OnEndGame()
     propUIContainer.visibility = Visibility.FORCE_OFF
     UI.SetCursorVisible(false)
 end
-
-function OnDie()
-    print("Dead")
-end
-
-localPlayer.diedEvent:Connect(OnDie)
 
 Events.Connect("SStartRound", OnStartRound)
 Events.Connect("SReport", OnReport)
